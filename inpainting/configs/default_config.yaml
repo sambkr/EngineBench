@@ -1,0 +1,12 @@
+model: unet
+lossfn: MSE
+gapsize: 0.1
+perm: A
+epochs: 300
+lr: 0.001
+ckpt_freq: 500
+workers: 4
+batchsize: 64
+target_imgshape: [128, 128]
+outputpath: ./outputs/
+filepath: ./data/r1300_p40_LSP_small.h5
