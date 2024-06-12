@@ -1,7 +1,7 @@
 # EngineBench
 [Project page](https://eng.ox.ac.uk/tpsrg/research/enginebench/) | [Link to paper](https://arxiv.org/abs/2406.03325)
 
-This is the EngineBench database, a collection of datasets collated by the [Oxford TPSRG](https://eng.ox.ac.uk/tpsrg/) specially for machine learning research in thermal propulsion systems. EngineBench is comprised of Particle Image Velocimetry (PIV) data from different experiments previously run on the transparent combustion chamber (TCC-III) optical engine by General Motors and the University of Michigan. Code for inpainting problems is 
+This is the code relating to the EngineBench database, a collection of datasets collated by the [Oxford TPSRG](https://eng.ox.ac.uk/tpsrg/) specially for machine learning research in thermal propulsion systems. EngineBench is comprised of Particle Image Velocimetry (PIV) data from different experiments previously run on the transparent combustion chamber (TCC-III) optical engine by General Motors and the University of Michigan. 
 
 ## Table of Contents
 1. [Acknowledgements](#acknowledgements)
@@ -12,8 +12,7 @@ This is the EngineBench database, a collection of datasets collated by the [Oxfo
 ## Acknowledgements
 
 Publications arising from the use of EngineBench should cite: 
-1. The EngineBench database DOI
-2. The following publication:
+1. The following publication:
    ```bibtex
    @misc{baker2024enginebench,
       title={EngineBench: Flow Reconstruction in the Transparent Combustion Chamber III Optical Engine}, 
@@ -23,7 +22,19 @@ Publications arising from the use of EngineBench should cite:
       archivePrefix={arXiv},
       primaryClass={physics.flu-dyn}
    }
-3. Include the following acknowledgment to the original data source:
+   ```
+2. The EngineBench DOI:
+   ```bibtex
+   @misc{samuel_baker_michael_hobley_isabel_scherl_xiaohang_fang_felix_leach_martin_davy_2024,
+      title={EngineBench},
+      url={https://www.kaggle.com/ds/5000332},
+      DOI={10.34740/KAGGLE/DS/5000332},
+      publisher={Kaggle},
+      author={Samuel Baker and Michael Hobley and Isabel Scherl and Xiaohang Fang and Felix Leach and Martin Davy},
+      year={2024}
+   }
+   ```
+4. Include the following acknowledgment to the original data source:
   
    "The TCC engine work has been funded by General Motors through the General Motors University of
    Michigan Automotive Cooperative Research Laboratory, Engine Systems Division."
