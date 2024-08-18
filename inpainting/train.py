@@ -10,11 +10,12 @@ import torch
 import yaml
 from models.unet import build_unet
 from models.unetr import build_unetr
+from models.cno import build_cno
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm import tqdm
 
-from utils import EarlyStopping
+from utils import EarlyStopping, GradLoss
 from utils.data_loading import (
     CustomConcatDataset,
     MichiganPIV,
@@ -136,6 +137,8 @@ def main():
         model = build_unet(nChannels, device)
     elif config["model"] == "UNETR":
         model = build_unetr(nChannels, device, config["target_imgshape"])
+    elif config["model"] == "cno":
+        model = build_cno(nChannels, device, config["target_imgshape"][0],4,4,4,16)
     else:
         raise Exception(
             f"Model {config['model']} not implemented. Try 'unet' or 'UNETR'."
@@ -150,6 +153,8 @@ def main():
         loss_fn = torch.nn.MSELoss()
     elif config["lossfn"] == "huber":
         loss_fn = torch.nn.HuberLoss(reduction="mean", delta=1)
+    elif config["lossfn"] == "grad":
+        loss_fn = GradLoss(lambda_grad=0.999, delta=1.0)
     else:
         raise Exception(
             f"Loss function {config['lossfn']} not implemented. Try 'MSE' or 'huber'."
