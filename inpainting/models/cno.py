@@ -1,4 +1,4 @@
-from external.model import CNO2d
+from external.CNO2d import CNO2d
 
 
 def build_cno(nChannels, device, s, N_layers, N_res, N_res_neck, channel_multiplier):
