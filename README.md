@@ -42,6 +42,7 @@ Publications arising from the use of EngineBench should cite:
 This work uses neural network implementations from other sources:
 * UNet and UNETR: [Project MONAI](https://github.com/Project-MONAI/MONAI)
 * Context encoder GAN: [BoyuanJiang](https://github.com/BoyuanJiang/context_encoder_pytorch) (`model.py` file archived to `inpainting/external/` 20-05-2024)
+* Convolutional neural operator (CNO): [camlab-ethz](https://github.com/camlab-ethz/ConvolutionalNeuralOperator) (`CNO2d.py` file archived to `inpainting/external/` 16-08-2024) 
 
 ## Quickstart
 The quickest way to start using EngineBench is via our tutorials using Kaggle notebooks:
@@ -73,7 +74,7 @@ Choose the training configurations by editing or creating a new `.yaml` file in 
 
 ### Model Training
 To train a model, use one of the following scripts based on the model type defined in your config file:
-For a UNet or UNETR model:
+For a UNet, UNETR or CNO model:
 ```bash
 python train.py --config configs/test_config.yaml
 ```
