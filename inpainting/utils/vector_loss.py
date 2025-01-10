@@ -21,6 +21,9 @@ class VectorLoss(torch.nn.Module):
             'comb': self.comb_loss
         }
 
+        if self.loss_type not in self.loss_map:
+            raise ValueError(f'Invalid loss type: {self.loss_type}. Must be RI, MI, RI_MI, or comb')
+
     @staticmethod
     def RI_loss(A,B):
         return (1 - RI(A,B))/2
@@ -35,8 +38,5 @@ class VectorLoss(torch.nn.Module):
     def comb_loss(self,A,B):
         return self.alpha2*self.RI_MI_loss(A,B) + (1-self.alpha2)*self.mse_loss(A,B)
     
-    def forward(self,A,B):
-        if self.loss_type not in self.loss_map:
-            raise ValueError(f'Invalid loss type: {self.loss_type}. Must be RI, MI, RI_MI, or comb')
-        
+    def forward(self,A,B):    
         return self.loss_map[self.loss_type](A, B)        
