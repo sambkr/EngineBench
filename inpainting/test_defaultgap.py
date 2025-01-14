@@ -10,7 +10,7 @@ from tqdm import tqdm
 from torchvision import transforms
 from torch.utils.data import DataLoader
 
-from utils.evaluation import calc_metrics, create_test_mask
+from utils.evaluation import calc_metrics_def
 from utils.data_loading import MichiganPIV, SheetGapHandler, DefaultHandler, custom_collate_fn
 from models.unet import build_unet
 from models.unetr import build_unetr
@@ -163,34 +163,6 @@ def main():
 
     model.eval()
 
-    # Create vertical and horizontal masks for testing
-    _, _, first_mask, _ = next(iter(test_loader))
-    old_mask = first_mask[0, 1, ...].detach().cpu().numpy()
-    old_mask[old_mask != 0] = 1
-    old_mask_tens = torch.stack(
-        (torch.from_numpy(old_mask), torch.from_numpy(old_mask)), axis=0
-    )
-    old_mask_batch = torch.unsqueeze(old_mask_tens, dim=0).to(
-        device
-    )  # Add a dimension for the batch length
-
-    max_prop = config["gapsize"]
-    v_mask, v_n = create_test_mask(old_mask, max_prop, mode="vert")
-    v_new_gaps = v_mask - old_mask
-    v_new_gaps[v_new_gaps < 0] = 0  # Account for mask discrepancy
-    v_mask_tens = torch.stack(
-        (torch.from_numpy(v_mask), torch.from_numpy(v_mask)), axis=0
-    )
-    v_mask_batch = torch.unsqueeze(v_mask_tens, dim=0).to(device)
-
-    h_mask, h_n = create_test_mask(old_mask, max_prop, mode="horiz")
-    h_new_gaps = h_mask - old_mask
-    h_new_gaps[h_new_gaps < 0] = 0
-    h_mask_tens = torch.stack(
-        (torch.from_numpy(h_mask), torch.from_numpy(h_mask)), axis=0
-    )
-    h_mask_batch = torch.unsqueeze(h_mask_tens, dim=0).to(device)
-
     # Centre and edge metrics
     metrics_c = np.empty(shape=(len(test_ds), 3))  # RI, MI, L2
     metrics_e = np.empty(shape=(len(test_ds), 3))  # RI, MI, L2
@@ -209,44 +181,31 @@ def main():
     logging.info("Calculating metrics:")
 
     with torch.no_grad():
-        for test_snaps, _, _, test_scales in tqdm(test_loader, total=len(test_loader)):
+        for test_snaps, _, test_masks, test_scales in tqdm(test_loader, total=len(test_loader)):
             test_snaps = test_snaps.to(device)
 
-            if count <= len(test_ds) // 2:
-                # Test on vertical mask for first half of the testing set
-                min_h, max_h = 0, -1
-                min_v, max_v = v_n, -v_n
-                mask_batch = v_mask_batch
-            else:
-                # Test on horizontal mask for second half of the testing set
-                min_h, max_h = h_n, -h_n
-                min_v, max_v = 0, -1
-                mask_batch = h_mask_batch
+            test_masks = test_masks.bool()
 
             # Fit the masks to the batch length
+            new_gaps, old_gaps = torch.unsqueeze(test_masks[:,0],dim=1), torch.unsqueeze(test_masks[:,1],dim=1)
+            new_gaps, old_gaps = torch.cat([new_gaps, new_gaps],dim=1), torch.cat([old_gaps, old_gaps],dim=1) # shape 64,2,128,128
             batch_len = len(test_snaps)
-            mask_full = mask_batch.repeat(batch_len, 1, 1, 1)
-            old_mask_full = old_mask_batch.repeat(batch_len, 1, 1, 1)
+            true_locations = (new_gaps == 0) & (old_gaps == 0) # pixel locations of true data
 
             test_gaps = torch.clone(test_snaps)
-            test_gaps[mask_full != 0] = 0
+            test_gaps[true_locations == False] = 0
 
             recons = model(test_gaps)
-
-            new_gaps = (
-                mask_full - old_mask_full
-            )  # Isolate the locations of the new gaps only for analysis
-            new_gaps[..., min_h:max_h, min_v:max_v] = 0
 
             for _, (
                 test_snap,
                 test_recon,
                 test_scale,
-                centre_mask,
-                edge_mask,
+                true_mask,
+                pred_mask,
             ) in enumerate(
                 zip(
-                    test_snaps.clone(), recons.clone(), test_scales, mask_full, new_gaps
+                    test_snaps.clone(), recons.clone(), test_scales, true_locations, new_gaps
                 )
             ):
                 # Rescale the snapshots
@@ -260,15 +219,13 @@ def main():
                 )
 
                 # Calculate and store metrics
-                m_c, m_e, energy = calc_metrics(
+                m_c, m_e, energy = calc_metrics_def(
                     test_snap,
                     test_recon,
-                    centre_mask,
-                    edge_mask,
+                    true_mask, # Locations of true data
+                    pred_mask, # Locations of predicted data
                     nChannels,
                     spectral_energy,
-                    v_n,
-                    horiz=False,
                 )
                 metrics_c[count] = m_c
                 metrics_e[count] = m_e
