@@ -1,6 +1,7 @@
 model: unet
 lossfn: MSE
 gapsize: 0.1
+gaptype: 'edge'
 perm: A
 epochs: 300
 lr: 0.001

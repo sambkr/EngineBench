@@ -19,6 +19,7 @@ from utils import EarlyStopping, GradLoss
 from utils.data_loading import (
     CustomConcatDataset,
     MichiganPIV,
+    DefaultHandler,
     SheetGapHandler,
     custom_collate_fn,
 )
@@ -29,7 +30,7 @@ def parse_args():
     parser.add_argument(
         "--config",
         type=str,
-        default="configs/test_config.yaml",
+        default="configs/vector_config.yaml",
         help="Path to configuration file",
     )
     args = parser.parse_args()
@@ -84,12 +85,22 @@ def main():
         "D": [0, 1, 4, 3, 2],
     }  # Select permutation
 
-    # Load datasets
-    gap_handler = SheetGapHandler(
-        seed=None, max_removal_fraction=config["gapsize"], central_sheet=False
-    )
+    # Select handler
+    if config["gaptype"] == 'edge':
+        gap_handler = SheetGapHandler(
+            seed=None, max_removal_fraction=config["gapsize"], central_sheet=False
+        )
+    elif config["gaptype"] == 'default':
+        gap_handler = DefaultHandler()
+        print(f'Gap type {config["gaptype"]}')
+    else:
+        raise Exception(
+            f"Gap type {config['gaptype']} not implemented. Try 'default' or 'edge'."
+        )
+
     tens_transform = transforms.ToTensor()
 
+    # Load datasets
     datasets = {}
     for idx, i in enumerate(tr_val_te_order_dict[config["perm"]]):
         grp_cad_idx = (0, i)

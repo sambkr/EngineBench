@@ -1,6 +1,7 @@
 model: gan
 lossfn: MSE_BCE
 gapsize: 0.1
+gaptype: 'edge'
 perm: A
 epochs: 300
 lr: 0.0001
