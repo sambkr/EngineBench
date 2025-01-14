@@ -1,2 +1,6 @@
 *.DS_Store
 inpainting/data*
+inpainting/outputs*
+
+__pycache__/
+*.py[cod]
