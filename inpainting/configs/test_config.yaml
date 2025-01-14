@@ -2,7 +2,7 @@ model: unet
 lossfn: MSE
 gapsize: 0.25
 perm: A
-epochs: 2
+epochs: 1
 lr: 0.001
 ckpt_freq: 500
 workers: 4
