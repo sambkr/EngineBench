@@ -20,8 +20,8 @@ class DefaultHandler(GapHandler):
         self.seed = seed
 
     def add_gaps(self, u, v, initial_mask):
-        u[25:35, 25:35] = 0
-        v[25:35, 25:35] = 0
+        u[18:31, 19:32] = 0
+        v[18:31, 19:32] = 0
         new_mask = np.zeros_like(u, dtype=np.uint8)
         new_mask[u == 0] = 1
         return u, v, new_mask
