@@ -189,11 +189,10 @@ def main():
             # Fit the masks to the batch length
             new_gaps, old_gaps = torch.unsqueeze(test_masks[:,0],dim=1), torch.unsqueeze(test_masks[:,1],dim=1)
             new_gaps, old_gaps = torch.cat([new_gaps, new_gaps],dim=1), torch.cat([old_gaps, old_gaps],dim=1) # shape 64,2,128,128
-            batch_len = len(test_snaps)
             true_locations = (new_gaps == 0) & (old_gaps == 0) # pixel locations of true data
 
             test_gaps = torch.clone(test_snaps)
-            test_gaps[true_locations == False] = 0
+            test_gaps[~true_locations] = 0
 
             recons = model(test_gaps)
 
