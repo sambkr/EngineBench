@@ -3,6 +3,7 @@ lossfn: MSE
 gapsize: 0.1
 gaptype: 'default'
 perm: A
+casename: ''
 epochs: 1
 lr: 0.001
 ckpt_freq: 500

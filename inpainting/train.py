@@ -56,7 +56,7 @@ def main():
         raise Exception(f"Configuration file {args.config} not found.")
 
     # Setup this case
-    case_name = f"{config['model']}_{config['lossfn']}_{int(config['gapsize']*100)}_{config['perm']}"
+    case_name = f"{config['model']}_{config['lossfn']}_{int(config['gapsize']*100)}_{config['perm']}_{config['casename']}"
     output_dir = os.path.join(config["outputpath"], case_name)
     os.makedirs(output_dir, exist_ok=True)
 
