@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm import tqdm
 
-from utils import EarlyStopping, GradLoss
+from utils import EarlyStopping, GradLoss, VectorLoss
 from utils.data_loading import (
     CustomConcatDataset,
     MichiganPIV,
@@ -59,6 +59,10 @@ def main():
     case_name = f"{config['model']}_{config['lossfn']}_{int(config['gapsize']*100)}_{config['perm']}_{config['casename']}"
     output_dir = os.path.join(config["outputpath"], case_name)
     os.makedirs(output_dir, exist_ok=True)
+
+    config_copy_path = os.path.join(output_dir,"config.yaml")
+    with open(config_copy_path,"w") as file:
+        yaml.dump(config,file) # save the config file
 
     setup_logging(output_dir)
     logging.info(f"Case name: {case_name}")
@@ -160,15 +164,21 @@ def main():
         logging.info(f"Using {torch.cuda.device_count()} GPUs")
         model = torch.nn.DataParallel(model)
 
-    if config["lossfn"] == "MSE":
-        loss_fn = torch.nn.MSELoss()
-    elif config["lossfn"] == "huber":
-        loss_fn = torch.nn.HuberLoss(reduction="mean", delta=1)
-    elif config["lossfn"] == "grad":
-        loss_fn = GradLoss(lambda_grad=0.999, delta=1.0)
-    else:
+    loss_fn_map = {
+        "MSE": lambda: torch.nn.MSELoss(),
+        "huber": lambda: torch.nn.HuberLoss(reduction="mean", delta=1),
+        "grad": lambda: GradLoss(lambda_grad=0.999,delta=1.0),
+        "RI": lambda: VectorLoss(loss_type="RI"),
+        "MI": lambda: VectorLoss(loss_type="MI"),
+        "RI_MI": lambda: VectorLoss(loss_type="RI_MI", alpha1=0.5),
+        "comb": lambda: VectorLoss(loss_type="comb", alpha1=0.5, alpha2=0.001),
+    }
+
+    try:
+        loss_fn = loss_fn_map[config["lossfn"]]
+    except KeyError:
         raise Exception(
-            f"Loss function {config['lossfn']} not implemented. Try 'MSE' or 'huber'."
+            f"Loss function {config["lossfn"]} not implemented. Try one of {list(loss_fn_map.keys())}."
         )
 
     optimizer = torch.optim.Adam(
