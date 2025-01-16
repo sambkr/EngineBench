@@ -174,7 +174,7 @@ def main():
     optimizer = torch.optim.Adam(
         model.parameters(), lr=config["lr"], weight_decay=0.001
     )
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.5)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=config['step'], gamma=0.5)
     early_stopping = EarlyStopping(patience=1000, delta=1e-6)
 
     results_array = np.zeros(
