@@ -175,7 +175,7 @@ def main():
     }
 
     try:
-        loss_fn = loss_fn_map[config["lossfn"]]
+        loss_fn = loss_fn_map[config["lossfn"]]()
     except KeyError:
         raise Exception(
             f"Loss function {config["lossfn"]} not implemented. Try one of {list(loss_fn_map.keys())}."
