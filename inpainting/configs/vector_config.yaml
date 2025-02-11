@@ -1,13 +1,13 @@
 model: unet
 lossfn: MSE
-gapsize: 0.25
+gapsize: 0.1
 gaptype: 'default'
-casename: ''
 perm: A
-epochs: 1
+casename: ''
+epochs: 600
 lr: 0.001
 step: 100
-ckpt_freq: 500
+ckpt_freq: 900
 workers: 4
 batchsize: 64
 target_imgshape: [128, 128]
