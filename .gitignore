@@ -1,1 +1,7 @@
-.DS_Store
+*.DS_Store
+inpainting/data*
+inpainting/outputs*
+inpainting/configs/test*
+
+__pycache__/
+*.py[cod]

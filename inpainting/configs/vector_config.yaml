@@ -1,14 +1,15 @@
 model: unet
 lossfn: MSE
 gapsize: 0.1
-gaptype: 'edge'
+gaptype: 'default'
 perm: A
-epochs: 300
+casename: ''
+epochs: 600
 lr: 0.001
 step: 100
-ckpt_freq: 500
+ckpt_freq: 900
 workers: 4
 batchsize: 64
 target_imgshape: [128, 128]
 outputpath: ./outputs/
-filepath: ./data/r1300_p40_LSP_small.h5
+filepath: ./data/LSP_r1300_p40_small.h5

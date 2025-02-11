@@ -15,10 +15,11 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm import tqdm
 
-from utils import EarlyStopping, GradLoss
+from utils import EarlyStopping, GradLoss, VectorLoss
 from utils.data_loading import (
     CustomConcatDataset,
     MichiganPIV,
+    DefaultHandler,
     SheetGapHandler,
     custom_collate_fn,
 )
@@ -29,7 +30,7 @@ def parse_args():
     parser.add_argument(
         "--config",
         type=str,
-        default="configs/default_config.yaml",
+        default="configs/vector_config.yaml",
         help="Path to configuration file",
     )
     args = parser.parse_args()
@@ -55,9 +56,13 @@ def main():
         raise Exception(f"Configuration file {args.config} not found.")
 
     # Setup this case
-    case_name = f"{config['model']}_{config['lossfn']}_{int(config['gapsize']*100)}_{config['perm']}"
+    case_name = f"{config['model']}_{config['lossfn']}_{int(config['gapsize']*100)}_{config['perm']}_{config['casename']}"
     output_dir = os.path.join(config["outputpath"], case_name)
     os.makedirs(output_dir, exist_ok=True)
+
+    config_copy_path = os.path.join(output_dir,"config.yaml")
+    with open(config_copy_path,"w") as file:
+        yaml.dump(config,file) # save the config file
 
     setup_logging(output_dir)
     logging.info(f"Case name: {case_name}")
@@ -84,12 +89,22 @@ def main():
         "D": [0, 1, 4, 3, 2],
     }  # Select permutation
 
-    # Load datasets
-    gap_handler = SheetGapHandler(
-        seed=None, max_removal_fraction=config["gapsize"], central_sheet=False
-    )
+    # Select handler
+    if config["gaptype"] == 'edge':
+        gap_handler = SheetGapHandler(
+            seed=None, max_removal_fraction=config["gapsize"], central_sheet=False
+        )
+    elif config["gaptype"] == 'default':
+        gap_handler = DefaultHandler()
+        print(f'Gap type {config["gaptype"]}')
+    else:
+        raise Exception(
+            f"Gap type {config['gaptype']} not implemented. Try 'default' or 'edge'."
+        )
+
     tens_transform = transforms.ToTensor()
 
+    # Load datasets
     datasets = {}
     for idx, i in enumerate(tr_val_te_order_dict[config["perm"]]):
         grp_cad_idx = (0, i)
@@ -149,21 +164,27 @@ def main():
         logging.info(f"Using {torch.cuda.device_count()} GPUs")
         model = torch.nn.DataParallel(model)
 
-    if config["lossfn"] == "MSE":
-        loss_fn = torch.nn.MSELoss()
-    elif config["lossfn"] == "huber":
-        loss_fn = torch.nn.HuberLoss(reduction="mean", delta=1)
-    elif config["lossfn"] == "grad":
-        loss_fn = GradLoss(lambda_grad=0.999, delta=1.0)
-    else:
+    loss_fn_map = {
+        "MSE": lambda: torch.nn.MSELoss(),
+        "huber": lambda: torch.nn.HuberLoss(reduction="mean", delta=1),
+        "grad": lambda: GradLoss(lambda_grad=0.999,delta=1.0),
+        "RI": lambda: VectorLoss(loss_type="RI"),
+        "MI": lambda: VectorLoss(loss_type="MI"),
+        "RI_MI": lambda: VectorLoss(loss_type="RI_MI", alpha1=0.3),
+        "comb": lambda: VectorLoss(loss_type="comb", alpha1=0.3, alpha2=0.2),
+    }
+
+    try:
+        loss_fn = loss_fn_map[config["lossfn"]]()
+    except KeyError:
         raise Exception(
-            f"Loss function {config['lossfn']} not implemented. Try 'MSE' or 'huber'."
+            f"Loss function {config["lossfn"]} not implemented. Try one of {list(loss_fn_map.keys())}."
         )
 
     optimizer = torch.optim.Adam(
         model.parameters(), lr=config["lr"], weight_decay=0.001
     )
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.5)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=config['step'], gamma=0.5)
     early_stopping = EarlyStopping(patience=1000, delta=1e-6)
 
     results_array = np.zeros(

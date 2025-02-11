@@ -123,7 +123,7 @@ class MichiganPIV(VisionDataset):
         A = A.to(dtype=torch.float32)
         B = B.to(dtype=torch.float32)
 
-        return A, B, C, scales
+        return A, B, C, scales # Full snapshots, gappy snapshots, masks, scales 
 
     def _load_data(self, idx):
         # Load the h5 slice, reshape and format.
