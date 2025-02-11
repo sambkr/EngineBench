@@ -4,9 +4,10 @@ gapsize: 0.1
 gaptype: 'default'
 perm: A
 casename: ''
-epochs: 1
+epochs: 600
 lr: 0.001
-ckpt_freq: 500
+step: 100
+ckpt_freq: 900
 workers: 4
 batchsize: 64
 target_imgshape: [128, 128]

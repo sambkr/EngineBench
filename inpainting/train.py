@@ -170,8 +170,8 @@ def main():
         "grad": lambda: GradLoss(lambda_grad=0.999,delta=1.0),
         "RI": lambda: VectorLoss(loss_type="RI"),
         "MI": lambda: VectorLoss(loss_type="MI"),
-        "RI_MI": lambda: VectorLoss(loss_type="RI_MI", alpha1=0.5),
-        "comb": lambda: VectorLoss(loss_type="comb", alpha1=0.5, alpha2=0.001),
+        "RI_MI": lambda: VectorLoss(loss_type="RI_MI", alpha1=0.3),
+        "comb": lambda: VectorLoss(loss_type="comb", alpha1=0.3, alpha2=0.2),
     }
 
     try:

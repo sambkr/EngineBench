@@ -5,6 +5,7 @@ gaptype: 'edge'
 perm: A
 epochs: 300
 lr: 0.001
+step: 100
 ckpt_freq: 500
 workers: 4
 batchsize: 64
